@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Morse Hand · Signal studio</title>
+    <link rel="icon" href="/static/mark.svg" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script defer src="/static/app.js"></script>
+  </head>
+  <body>
+    <aside class="rail">
+      <div class="wrap top">
+        <div class="brand"><img src="/static/mark.svg" alt="" />Morse Hand</div>
+        <nav aria-label="Workspace">
+          <a href="#studio" aria-current="location"
+            ><span data-icon="pulse"></span>Signal studio</a
+          >
+          <a href="#guide"><span data-icon="guide"></span>Gesture guide</a>
+          <a href="#timing"
+            ><span data-icon="settings"></span>Timing settings</a
+          >
+        </nav>
+        <span class="connection"
+          ><i id="lamp"></i><span id="connection">Connecting</span></span
+        >
+      </div>
+    </aside>
+    <main class="wrap" id="studio">
+      <div class="intro">
+        <div>
+          <h1>Signal studio</h1>
+          <p>Turn a pinch into Morse code, one letter at a time.</p>
+        </div>
+        <button id="sound" aria-pressed="false">
+          <span data-icon="sound"></span><span id="soundLabel">Sound on</span>
+        </button>
+      </div>
+      <div class="workspace">
+        <section class="card capture">
+          <div class="cardhead">
+            <h2><span data-icon="scan"></span>Gesture input</h2>
+            <span class="tag" id="source">Camera</span>
+          </div>
+          <div class="screen">
+            <div id="visual">
+              <video muted autoplay playsinline></video
+              ><canvas id="overlay"></canvas>
+            </div>
+            <div id="standby">
+              <img src="/static/gesture.svg" alt="" /><strong id="previewTitle"
+                >Camera standby</strong
+              ><small id="previewHint"
+                >Start your camera to track a hand.</small
+              >
+            </div>
+            <b class="corner c1"></b><b class="corner c2"></b
+            ><b class="corner c3"></b><b class="corner c4"></b>
+          </div>
+          <div class="meter">
+            <span id="status" role="status">Standby</span
+            ><progress
+              id="progress"
+              aria-label="Gesture hold progress"
+              value="0"
+              max="1"
+            ></progress>
+          </div>
+          <div class="actions modes">
+            <button id="camera" class="primary">
+              <span data-icon="camera"></span><span>Start Camera</span></button
+            ><button id="demo">
+              <span data-icon="keyboard"></span><span>Keyboard Demo</span>
+            </button>
+          </div>
+        </section>
+        <section class="card output">
+          <div class="cardhead">
+            <h2><span data-icon="pulse"></span>Live decoder</h2>
+          </div>
+          <div class="signal">
+            <h3>Current sequence</h3>
+            <div id="sequence" aria-label="Current sequence">&nbsp;</div>
+            <small id="seqHint" role="status">Waiting for input</small>
+          </div>
+          <div class="transcript">
+            <h3>Decoded text</h3>
+            <div id="text" aria-live="polite" data-empty="true">
+              Your message appears here
+            </div>
+          </div>
+          <div class="actions edit">
+            <button id="undo"><span data-icon="undo"></span>Undo</button
+            ><button id="clear">
+              <span data-icon="clear"></span><span>Clear</span></button
+            ><button id="copy">
+              <span data-icon="copy"></span><span>Copy</span>
+            </button>
+          </div>
+        </section>
+      </div>
+      <p id="message" role="alert"></p>
+      <section id="guide" class="guide card">
+        <h2><span data-icon="guide"></span>Gesture guide</h2>
+        <div class="steps">
+          <div>
+            <b class="glyph">·</b>
+            <div>
+              <h4>Tap for a dot</h4>
+              <p>Pinch and release quickly.</p>
+            </div>
+          </div>
+          <div>
+            <b class="glyph">−</b>
+            <div>
+              <h4>Hold for a dash</h4>
+              <p>Release after <span id="dashValue">2.0</span> seconds.</p>
+            </div>
+          </div>
+          <div>
+            <b class="glyph">/</b>
+            <div>
+              <h4>Pause to decode</h4>
+              <p>
+                Release for <span id="charValue">1.2</span>s to finish a letter.
+              </p>
+            </div>
+          </div>
+          <div>
+            <b class="glyph" aria-hidden="true">␣</b>
+            <div>
+              <h4>Close your hand for a space</h4>
+              <p>
+                Show your palm, tuck your thumb, then close all four fingers over it for ½ second.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <details id="timing" class="card settings">
+        <summary><span data-icon="settings"></span>Timing settings</summary>
+        <form id="settings">
+          <label
+            >Dash hold (s)<input
+              id="dash"
+              type="number"
+              value="2.0"
+              step=".1"
+              min=".2"
+              max="6"
+              required /></label
+          ><label
+            >Letter gap (s)<input
+              id="character"
+              type="number"
+              value="1.2"
+              step=".1"
+              min=".2"
+              max="9.9"
+              required /></label
+          ><label
+            >Word gap (s)<input
+              id="word"
+              type="number"
+              value="2.8"
+              step=".1"
+              min=".3"
+              max="10"
+              required
+          /></label>
+          <label class="check"
+            ><input type="checkbox" id="automaticSpaces" /> Also add spaces
+            after a word gap</label
+          >
+          <button>Apply</button>
+        </form>
+      </details>
+      <footer>
+        <span data-icon="shield"></span> Local processing <span>·</span> Camera
+        frames stay on this device.
+      </footer>
+    </main>
+  </body>
+</html>
