@@ -18,7 +18,7 @@ morse-hand-model
 morse-hand
 ```
 
-Open [Signal studio](http://127.0.0.1:8000). Press Ctrl+C in the server terminal to shut it down. For a keyboard-only installation, skip the model download. On subsequent launches, activate the environment and run `morse-hand`.
+The launcher opens [Signal studio](http://127.0.0.1:8000) in your default browser when the server is ready. To start the server without opening a tab, use `morse-hand --no-browser`. Press Ctrl+C in the server terminal to shut it down. For a keyboard-only installation, skip the model download. On subsequent launches, activate the environment and run `morse-hand`.
 
 The model installer downloads Google's [Hand Landmarker float16 v1 task bundle](https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task) to `~/.cache/morse-hand/hand_landmarker.task`. It checks SHA-256 against the pinned digest before replacing the cached file. After dependency and model installation, the app can run offline. See Google's [Python Hand Landmarker guide](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker/python) for the underlying tracker.
 

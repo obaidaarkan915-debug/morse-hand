@@ -1,9 +1,12 @@
 """Loopback web server. Each socket owns its timing, transcript and tracker."""
 
+import argparse
 import asyncio
 import json
 import logging
+import webbrowser
 from pathlib import Path
+from threading import Thread
 from time import monotonic
 from urllib.parse import urlsplit
 
@@ -142,7 +145,25 @@ async def session(ws: WebSocket):
 def main():
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=8000, ws_max_size=512_000)
+    parser = argparse.ArgumentParser(description="Launch Morse Hand locally.")
+    parser.add_argument(
+        "--no-browser", action="store_true", help="Skip opening a browser tab."
+    )
+    options = parser.parse_args()
+
+    class LocalServer(uvicorn.Server):
+        async def startup(self, sockets=None):
+            await super().startup(sockets=sockets)
+            if self.started and not options.no_browser:
+                Thread(
+                    target=webbrowser.open_new_tab,
+                    args=("http://127.0.0.1:8000/",),
+                    daemon=True,
+                ).start()
+
+    LocalServer(
+        uvicorn.Config(app, host="127.0.0.1", port=8000, ws_max_size=512_000)
+    ).run()
 
 
 if __name__ == "__main__":
