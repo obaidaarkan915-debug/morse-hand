@@ -36,6 +36,7 @@ class Timing:
             self.settings.automatic_spaces
             and gap >= self.settings.word
             and not self.decoder.sequence
+            and not self.decoder.text.endswith(" ")
         ):
             self.decoder.word_pending = bool(self.decoder.text)
 
@@ -43,8 +44,9 @@ class Timing:
         if self.start is not None:
             return
         self.decoder.finish()
-        if self.decoder.text and not self.decoder.invalid:
-            self.decoder.word_pending = True
+        if not self.decoder.invalid:
+            self.decoder.text += " "
+            self.decoder.word_pending = False
             self.release = None
 
     def begin(self, now):
@@ -79,5 +81,6 @@ class Timing:
         elif self.decoder.invalid:
             self.decoder.sequence = ""
             self.decoder.invalid = False
+            self.decoder.last_sequence = ""
         else:
             self.decoder = Decoder()

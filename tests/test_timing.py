@@ -147,20 +147,22 @@ def test_recovery_needs_confirmed_closed_sample():
 def test_manual_word_spacing_and_undo():
     t = Timing()
     t.queue_space()
-    assert not t.decoder.word_pending
+    assert t.decoder.text == " "
+    t.edit("undo", 0)
+    assert t.decoder.text == ""
     enter(t, ".", 0)
     t.tick(60)
     assert not t.decoder.word_pending
     enter(t, ".", 61)
     t.queue_space()
     t.queue_space()
-    assert t.decoder.text == "EE" and t.decoder.word_pending
+    assert t.decoder.text == "EE  " and not t.decoder.word_pending
     t.edit("undo", 62)
-    assert t.decoder.text == "EE" and not t.decoder.word_pending
+    assert t.decoder.text == "EE " and not t.decoder.word_pending
     t.queue_space()
     end = enter(t, ".", 63)
     t.tick(end + 1.3)
-    assert t.decoder.text == "EE E"
+    assert t.decoder.text == "EE  E"
 
 
 def test_space_preserves_hold_and_invalid_sequence():
@@ -187,10 +189,10 @@ def test_closed_fist_delimits_words_once_without_morse_input():
         (0.91, 0.8, True),
     ]:
         g.sample(index, now, fist)
-    assert t.decoder.text == "E" and t.decoder.word_pending
+    assert t.decoder.text == "E " and not t.decoder.word_pending
     t.edit("undo", 1)
-    g.sample(0.8, 1.2, 0.07)
-    assert not t.decoder.word_pending  # Still held, so no second command.
+    g.sample(0.8, 1.2, True)
+    assert t.decoder.text == "E"  # Still held, so no second command.
     for now, index, fist in [
         (1.3, 0.8, False),
         (1.4, 0.8, True),
@@ -234,5 +236,5 @@ def test_forming_fist_cancels_incidental_index_pinch():
         (0.95, 0.9, False),
     ]:
         g.sample(index, now, fist)
-    assert t.decoder.word_pending and t.decoder.text == "A"
+    assert t.decoder.text == "A " and not t.decoder.word_pending
     assert not t.decoder.sequence and t.start is None

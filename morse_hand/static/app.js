@@ -30,6 +30,7 @@ let wanted = "idle",
   revision = 0,
   stream,
   audio,
+  soundOutput,
   muted = false,
   held = false;
 let busyFrame = false,
@@ -40,25 +41,38 @@ const send = (op, value) => {
   if (socket.readyState === WebSocket.OPEN)
     socket.send(JSON.stringify({ op, value }));
 };
+const MORSE_UNIT = 0.10;
+const MORSE_PITCH = 650;
+
 function soundOn() {
+  if (muted) return;
   try {
-    audio ??= new AudioContext();
-    audio.resume().catch(() => {});
-  } catch {}
+    if (!audio) {
+      audio = new AudioContext();
+      soundOutput = audio.createGain();
+      soundOutput.connect(audio.destination);
+    }
+    if (audio.state !== "running") audio.resume().catch(() => {});
+  } catch {
+    // Typing and decoding still work on devices without Web Audio.
+  }
 }
+
 function beep(symbol) {
-  if (!audio || muted) return;
-  const osc = audio.createOscillator(),
-    gain = audio.createGain(),
-    start = audio.currentTime;
-  const end = start + (symbol === "." ? 0.09 : 0.27);
-  osc.frequency.value = 590;
-  gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(0.09, start + 0.009);
-  gain.gain.exponentialRampToValueAtTime(0.0001, end);
-  osc.connect(gain).connect(audio.destination);
-  osc.start(start);
-  osc.stop(end);
+  if (muted || audio?.state !== "running") return;
+  const tone = audio.createOscillator();
+  const envelope = audio.createGain();
+  const start = audio.currentTime;
+  const end = start + MORSE_UNIT * (symbol === "-" ? 3 : 1);
+  tone.type = "sine";
+  tone.frequency.value = MORSE_PITCH;
+  envelope.gain.setValueAtTime(0, start);
+  envelope.gain.linearRampToValueAtTime(0.24, start + 0.008);
+  envelope.gain.setValueAtTime(0.24, end - 0.018);
+  envelope.gain.linearRampToValueAtTime(0, end);
+  tone.connect(envelope).connect(soundOutput);
+  tone.start(start);
+  tone.stop(end);
 }
 function releaseCamera() {
   if (stream) for (const track of stream.getTracks()) track.stop();
@@ -79,7 +93,7 @@ function markMode() {
     wanted === "demo" ? "Hold the spacebar" : "Camera standby";
   $("previewHint").textContent =
     wanted === "demo"
-      ? "Release for a symbol. Press Enter for a word space."
+      ? "Release for a symbol. Press Enter once per space."
       : "Start your camera to track a hand.";
 }
 async function changeMode(next) {
@@ -142,6 +156,7 @@ $("demo").onclick = () => changeMode(wanted === "demo" ? "idle" : "demo");
 $("sound").onclick = () => {
   muted = !muted;
   if (!muted) soundOn();
+  if (soundOutput) soundOutput.gain.value = muted ? 0 : 1;
   $("sound").setAttribute("aria-pressed", String(muted));
   $("soundLabel").textContent = muted ? "Muted" : "Sound on";
 };
@@ -189,6 +204,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   if (!held && !e.repeat) {
+    soundOn();
     held = true;
     send("down");
   }
@@ -276,19 +292,23 @@ socket.onmessage = ({ data }) => {
   if (s.frame) busyFrame = false;
   if (s.tick) busyTick = false;
   mode = s.mode;
+  renderPractice(s);
   decoded = s.text;
   if ($("status").textContent !== s.status) $("status").textContent = s.status;
   $("progress").value = s.progress;
   $("sequence").textContent =
     s.sequence.replaceAll(".", "·").replaceAll("-", "−") || " ";
   $("sequence").classList.toggle("empty", !s.sequence);
+  const trailingSpaces = decoded.length - decoded.trimEnd().length;
   const hint = s.invalid
     ? "Unknown sequence. Undo a symbol or clear this sequence."
     : s.sequence
       ? "Pause to decode this letter"
       : s.pending
         ? "Space queued · start the next word"
-        : "Waiting for input";
+        : trailingSpaces
+          ? `${trailingSpaces} ${trailingSpaces === 1 ? "space" : "spaces"} added`
+          : "Waiting for input";
   if ($("seqHint").textContent !== hint) $("seqHint").textContent = hint;
   $("clear").lastElementChild.textContent = s.invalid
     ? "Clear sequence"
@@ -362,3 +382,193 @@ document.querySelector('a[href="#timing"]').addEventListener("click", () => {
 });
 window.addEventListener("hashchange", selectSection);
 selectSection();
+
+async function loadAlphabet() {
+  const status = $("referenceStatus");
+  try {
+    const response = await fetch("/api/alphabet");
+    if (!response.ok) throw new Error("Could not load the alphabet.");
+    const alphabet = await response.json();
+    referenceAlphabet = alphabet;
+    for (const character of "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") {
+      const card = document.createElement("div");
+      const label = document.createElement("dt");
+      const code = document.createElement("dd");
+      const practiceButton = document.createElement("button");
+      practiceButton.textContent = character;
+      practiceButton.setAttribute("aria-label", `Practice ${character}`);
+      practiceButton.onclick = () => {
+        if (socket.readyState === WebSocket.OPEN) {
+          focusPractice = true;
+          send("practice", character);
+        } else {
+          status.hidden = false;
+          status.textContent =
+            "Reconnect to the local server to start practice.";
+        }
+      };
+      label.append(practiceButton);
+      code.textContent = alphabet[character]
+        .replaceAll(".", "·")
+        .replaceAll("-", "−");
+      code.setAttribute(
+        "aria-label",
+        Array.from(alphabet[character], (mark) =>
+          mark === "." ? "dot" : "dash",
+        ).join(" "),
+      );
+      card.append(label, code);
+      $("alphabet").append(card);
+    }
+    status.hidden = true;
+    startGames(alphabet);
+  } catch {
+    status.textContent =
+      "The alphabet could not load. Reload the page to try again.";
+  }
+}
+
+const morseMarks = (code) => code.replaceAll(".", "·").replaceAll("-", "−");
+let referenceAlphabet = {};
+let practiceLetter = "";
+let focusPractice = false;
+$("practiceRetry").onclick = () => {
+  send("practice", practiceLetter);
+  if (wanted === "demo") $("standby").focus({ preventScroll: true });
+};
+$("practiceExit").onclick = () => {
+  send("practice", "");
+  $(wanted === "demo" ? "standby" : "camera").focus({ preventScroll: true });
+};
+
+function updateText(id, value) {
+  if ($(id).textContent !== value) $(id).textContent = value;
+}
+
+function renderPractice({ practice, attempt, sequence, invalid }) {
+  $("practice").hidden = !practice;
+  if (!practice) {
+    practiceLetter = "";
+    return;
+  }
+  const target = morseMarks(referenceAlphabet[practice] || "");
+  updateText("practiceTitle", `Practice ${practice}`);
+  updateText("practiceTarget", target || "");
+  updateText("practiceAttempt", morseMarks(sequence || attempt) || "—");
+  updateText(
+    "practiceFeedback",
+    !attempt || (sequence && !invalid)
+      ? "Match the target pattern."
+      : morseMarks(attempt) === target
+        ? "Correct! Your pattern matches."
+        : "Try again. Compare your dots and dashes with the target.",
+  );
+  practiceLetter = practice;
+  if (focusPractice) {
+    focusPractice = false;
+    $("practiceTitle").focus();
+  }
+}
+
+function shuffled(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function startGames(alphabet) {
+  const letters = Object.keys(alphabet).filter((letter) =>
+    /^[A-Z]$/.test(letter),
+  );
+  function choices(id, answer, onAnswer) {
+    const group = $(id);
+    group.replaceChildren();
+    const alternatives = shuffled(
+      letters.filter((letter) => letter !== answer),
+    ).slice(0, 3);
+    for (const letter of shuffled([answer, ...alternatives])) {
+      const button = document.createElement("button");
+      button.textContent = letter;
+      button.onclick = () => {
+        const correct = letter === answer;
+        button.classList.add(correct ? "correct-answer" : "incorrect-answer");
+        if (correct) {
+          for (const option of group.children) option.disabled = true;
+        } else {
+          button.disabled = true;
+          [...group.children].find((option) => !option.disabled)?.focus();
+        }
+        onAnswer(correct);
+      };
+      group.append(button);
+    }
+  }
+
+  let question = "";
+  function nextQuiz(focus) {
+    question = shuffled(letters.filter((letter) => letter !== question))[0];
+    $("quizCode").textContent = morseMarks(alphabet[question]);
+    $("quizFeedback").textContent = "";
+    $("quizNext").disabled = true;
+    choices("quizOptions", question, (correct) => {
+      $("quizFeedback").textContent = correct
+        ? `Correct! That’s ${question}.`
+        : "Try another letter.";
+      if (correct) {
+        $("quizNext").disabled = false;
+        $("quizNext").focus();
+      }
+    });
+    if (focus) $("quizOptions").firstElementChild.focus();
+  }
+  $("quizNext").onclick = () => nextQuiz(true);
+  nextQuiz(false);
+
+  const messages = ["SOS", "HELLO", "GOOD DAY", "HI THERE", "KEEP GOING"];
+  let messageIndex = -1;
+  let cursor = 0;
+  function showChallenge(focus) {
+    const message = messages[messageIndex];
+    const complete = cursor === message.length;
+    $("messageTiles").replaceChildren();
+    for (const [index, letter] of Array.from(message).entries()) {
+      const tile = document.createElement("span");
+      tile.className = letter === " " ? "message-gap" : "message-tile";
+      tile.textContent = letter === " " || index < cursor ? letter : "_";
+      if (index === cursor) tile.classList.add("current-tile");
+      $("messageTiles").append(tile);
+    }
+    $("challengeFeedback").textContent = complete
+      ? `Message decoded! ${message}`
+      : `${message.slice(0, cursor).replaceAll(" ", "").length} of ${message.replaceAll(" ", "").length} letters revealed`;
+    $("challengeCode").textContent = complete
+      ? ""
+      : morseMarks(alphabet[message[cursor]]);
+    if (complete) {
+      $("challengeOptions").replaceChildren();
+      $("challengeNext").focus();
+      return;
+    }
+    choices("challengeOptions", message[cursor], (correct) => {
+      if (!correct) {
+        $("challengeFeedback").textContent = "Try another letter.";
+        return;
+      }
+      cursor++;
+      if (message[cursor] === " ") cursor++;
+      showChallenge(true);
+    });
+    if (focus) $("challengeOptions").firstElementChild.focus();
+  }
+  function nextMessage(focus) {
+    messageIndex = (messageIndex + 1) % messages.length;
+    cursor = 0;
+    showChallenge(focus);
+  }
+  $("challengeNext").onclick = () => nextMessage(true);
+  nextMessage(false);
+}
+loadAlphabet();

@@ -18,6 +18,7 @@ class Decoder:
     sequence: str = ""
     invalid: bool = False
     word_pending: bool = False
+    last_sequence: str = ""
 
     @property
     def display_text(self):
@@ -25,6 +26,7 @@ class Decoder:
 
     def finish(self):
         if self.sequence and not self.invalid:
+            self.last_sequence = self.sequence
             letter = ALPHABET.get(self.sequence)
             if letter is None:
                 self.invalid = True
@@ -34,11 +36,12 @@ class Decoder:
             self.word_pending = False
 
     def undo(self):
+        self.last_sequence = ""
         if self.sequence:
             self.sequence = self.sequence[:-1]
         elif self.word_pending:
             self.word_pending = False
         else:
-            self.text = self.text[:-1].rstrip()
+            self.text = self.text[:-1]
             self.word_pending = False
         self.invalid = False

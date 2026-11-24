@@ -17,6 +17,8 @@
           <a href="#studio" aria-current="location"
             ><span data-icon="pulse"></span>Signal studio</a
           >
+          <a href="#reference"><span data-icon="guide"></span>Morse alphabet</a>
+          <a href="#learn"><span data-icon="pulse"></span>Learning games</a>
           <a href="#guide"><span data-icon="guide"></span>Gesture guide</a>
           <a href="#timing"
             ><span data-icon="settings"></span>Timing settings</a
@@ -32,11 +34,41 @@
         <div>
           <h1>Signal studio</h1>
           <p>Turn a pinch into Morse code, one letter at a time.</p>
+          <a class="reference-link" href="#reference"
+            >Review the Morse alphabet</a
+          >
+          <a class="reference-link" href="#learn">Play learning games</a>
         </div>
         <button id="sound" aria-pressed="false">
           <span data-icon="sound"></span><span id="soundLabel">Sound on</span>
         </button>
       </div>
+      <section
+        id="practice"
+        class="card guide"
+        hidden
+        aria-labelledby="practiceTitle"
+      >
+        <h2 id="practiceTitle" tabindex="-1">Letter practice</h2>
+        <p>
+          Use the camera or Keyboard Demo to match the pattern. Pause to submit.
+        </p>
+        <div class="practice-patterns">
+          <div>
+            <h3>Target</h3>
+            <p id="practiceTarget" class="morse-pattern"></p>
+          </div>
+          <div>
+            <h3>Your attempt</h3>
+            <p id="practiceAttempt" class="morse-pattern">—</p>
+          </div>
+        </div>
+        <p id="practiceFeedback" role="status"></p>
+        <div class="actions">
+          <button id="practiceRetry">Retry</button>
+          <button id="practiceExit">End practice</button>
+        </div>
+      </section>
       <div class="workspace">
         <section class="card capture">
           <div class="cardhead">
@@ -101,6 +133,64 @@
         </section>
       </div>
       <p id="message" role="alert"></p>
+      <section
+        id="reference"
+        class="card guide"
+        aria-labelledby="referenceTitle"
+      >
+        <h2 id="referenceTitle">
+          <span data-icon="guide"></span>Morse alphabet
+        </h2>
+        <p class="reference-key">
+          International Morse · A–Z and 0–9. Select a letter or number to
+          practice its pattern.
+        </p>
+        <p id="referenceStatus" role="status">Loading alphabet…</p>
+        <dl
+          id="alphabet"
+          class="alphabet"
+          aria-label="Letters and numbers with their Morse codes"
+        ></dl>
+        <a class="reference-link" href="#studio">Back to the studio ↑</a>
+      </section>
+      <section id="learn" class="card guide" aria-labelledby="learnTitle">
+        <h2 id="learnTitle">Learning games</h2>
+        <div class="games">
+          <section>
+            <h3>Guess the letter</h3>
+            <p>
+              Pick the letter that matches the code. You can retry a question.
+            </p>
+            <p id="quizCode" class="morse-pattern"></p>
+            <div
+              id="quizOptions"
+              class="answer-options"
+              role="group"
+              aria-label="Letter choices"
+            ></div>
+            <p id="quizFeedback" role="status"></p>
+            <button id="quizNext" disabled>Next letter</button>
+          </section>
+          <section>
+            <h3>Decode a secret message</h3>
+            <p>Decode one letter at a time to reveal the message.</p>
+            <div
+              id="messageTiles"
+              class="message-tiles"
+              aria-label="Message discovered so far"
+            ></div>
+            <p id="challengeCode" class="morse-pattern"></p>
+            <div
+              id="challengeOptions"
+              class="answer-options"
+              role="group"
+              aria-label="Message letter choices"
+            ></div>
+            <p id="challengeFeedback" role="status"></p>
+            <button id="challengeNext">New message</button>
+          </section>
+        </div>
+      </section>
       <section id="guide" class="guide card">
         <h2><span data-icon="guide"></span>Gesture guide</h2>
         <div class="steps">
@@ -132,7 +222,8 @@
             <div>
               <h4>Close your hand for a space</h4>
               <p>
-                Show your palm, tuck your thumb, then close all four fingers over it for ½ second.
+                Tuck your thumb, then close all four fingers over it for ½
+                second. Reopen and repeat for more spaces.
               </p>
             </div>
           </div>

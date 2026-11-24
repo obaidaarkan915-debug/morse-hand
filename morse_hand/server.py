@@ -14,6 +14,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from .decoder import ALPHABET, Decoder
 from .gesture import Gesture
 from .timing import Settings, Timing
 from .tracking import Tracker
@@ -26,6 +27,11 @@ app.mount("/static", StaticFiles(directory=STATIC), name="static")
 @app.get("/")
 def index():
     return FileResponse(STATIC / "index.html")
+
+
+@app.get("/api/alphabet")
+def alphabet():
+    return {character: code for code, character in ALPHABET.items()}
 
 
 @app.websocket("/session")
@@ -41,6 +47,9 @@ async def session(ws: WebSocket):
     await ws.accept()
     timing = Timing()
     gesture = Gesture(timing)
+    studio_decoder = timing.decoder
+    studio_release = None
+    practice = ""
     tracker = None
     points = []
     mode = "idle"
@@ -87,6 +96,20 @@ async def session(ws: WebSocket):
                     elif op in ("undo", "clear"):
                         timing.edit(op, now)
                         gesture = Gesture(timing)
+                    elif op == "practice":
+                        character = msg["value"]
+                        if character in ALPHABET.values() or (
+                            practice and character == ""
+                        ):
+                            if not practice:
+                                timing.cancel(now)
+                                studio_decoder = timing.decoder
+                                studio_release = timing.release
+                            practice = character
+                            timing.start = None
+                            timing.release = None if practice else studio_release
+                            timing.decoder = Decoder() if practice else studio_decoder
+                            gesture = Gesture(timing)
                     elif op == "settings":
                         timing.settings = Settings(**msg["value"])
                 if mode == "camera":
@@ -133,6 +156,8 @@ async def session(ws: WebSocket):
                     "tick": (not frame and op == "tick"),
                     "error": error,
                     "pending": decoder.word_pending,
+                    "practice": practice,
+                    "attempt": decoder.last_sequence if practice else "",
                 }
             )
     except WebSocketDisconnect:

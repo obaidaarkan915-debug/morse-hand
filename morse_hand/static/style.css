@@ -567,3 +567,135 @@ main.wrap {
     padding: 0 3% 12px;
   }
 }
+
+#text {
+  white-space: break-spaces;
+}
+.reference-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #215743;
+  font-size: 0.875rem;
+  text-underline-offset: 3px;
+}
+.reference-key {
+  color: var(--muted);
+}
+.alphabet {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+.alphabet > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: #f5f7f5;
+}
+.alphabet dt {
+  font-weight: 700;
+}
+.alphabet dd {
+  margin: 0;
+  font: 700 14px monospace;
+  letter-spacing: 1px;
+  color: #215743;
+}
+
+#practice {
+  margin-bottom: 18px;
+}
+
+.practice-patterns,
+.games {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.practice-patterns > div,
+.games > section {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f5f7f5;
+}
+
+.games {
+  margin-top: 14px;
+}
+
+.games h3 {
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.morse-pattern {
+  min-height: 1.5em;
+  margin: 0.5rem 0;
+  color: #215743;
+  font: 700 clamp(1.35rem, 4vw, 2rem) / 1.5 monospace;
+  letter-spacing: 0.16em;
+  overflow-wrap: anywhere;
+}
+
+.alphabet button {
+  min-height: 36px;
+  min-width: 34px;
+  padding: 4px;
+  font-weight: 700;
+}
+
+.answer-options,
+.message-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.answer-options button {
+  min-width: 42px;
+}
+
+.answer-options .correct-answer {
+  background: #d9ece2;
+  color: #174936;
+  opacity: 1;
+}
+
+.answer-options .incorrect-answer {
+  background: #f8e9e7;
+  color: #882d25;
+  opacity: 1;
+}
+
+.message-tile {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: 700 1rem monospace;
+}
+
+.current-tile {
+  border-color: #215743;
+  background: #e1eee7;
+}
+
+.message-gap {
+  min-width: 10px;
+}
+
+@media (max-width: 650px) {
+  .games {
+    grid-template-columns: 1fr;
+  }
+}

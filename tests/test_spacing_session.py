@@ -37,10 +37,14 @@ def test_camera_session_queues_space_from_closed_fist(monkeypatch):
         assert observe(0.4, "fist")["status"] == "Hold for space"
         assert 0 < observe(0.7, "fist")["progress"] < 1
         ready = observe(0.91, "fist")
-        assert ready["pending"] and ready["symbol"] is None and ready["text"] == "E"
+        assert ready["symbol"] is None and ready["text"] == "E "
         observe(1, "open")
-        observe(1.2, "index")
-        observe(1.4, "open")
-        now = 2.8
+        observe(1.1, "fist")
+        observe(1.4, "fist")
+        assert observe(1.7, "fist")["text"] == "E  "
+        observe(1.8, "open")
+        observe(2.0, "index")
+        observe(2.2, "open")
+        now = 3.6
         ws.send_json({"op": "tick"})
-        assert ws.receive_json()["text"] == "E E"
+        assert ws.receive_json()["text"] == "E  E"

@@ -26,15 +26,19 @@ The model installer downloads Google's [Hand Landmarker float16 v1 task bundle](
 
 1. Click **Start Camera**, grant permission and show an open hand. Either hand works. The preview is mirrored. The two green markers identify your thumb and index fingertips.
 2. Briefly pinch and release for **·**. Hold for at least **2.0 seconds** for **−**. Wait for **Dash ready**, then release. Holding longer still produces one dash. Contacts shorter than 80 ms are ignored.
-3. Keep pauses between symbols below **1.2 seconds**. An open-hand pause of 1.2 seconds decodes the letter. Take as long as you like between letters. For a **word space**, show an open palm, **tuck your thumb across it and fold all four fingers over it for half a second**. When you see **Space queued**, open your hand and start the next word. The gesture finishes the current letter and queues one separator.
-4. Click **Keyboard Demo** to do the same with the spacebar. Press **Enter** to queue a word space. Keep focus on the demo area while typing. Standard keyboard controls remain available by Tab. Use **Sound on** to mute the feedback tones.
+3. Keep pauses between symbols below **1.2 seconds**. An open-hand pause of 1.2 seconds decodes the letter. Take as long as you like between letters. For a **word space**, show an open palm, **tuck your thumb across it and fold all four fingers over it for half a second**. Open your hand after each space. Repeat the gesture to insert as many spaces as you want.
+4. Click **Keyboard Demo** to do the same with the spacebar. Press **Enter** once per space. Keep focus on the demo area while typing. Standard keyboard controls remain available by Tab. Each recorded dot plays a short tone and each dash plays a tone three times as long. The **Sound on** button mutes or unmutes both camera and keyboard tones.
 5. Adjust the three thresholds under **Timing settings** and click **Apply**. For automatic spacing as well, enable **Also add spaces after a word gap**. The default word gap is 2.8 seconds and must exceed the letter gap.
+
+Open **Morse alphabet** to review the dot and dash patterns for A–Z and 0–9. Select any character to practice it with the camera or Keyboard Demo. Pause after your attempt to compare your pattern with the target. **End practice** returns to your studio transcript.
+
+Open **Learning games** to match Morse patterns to letters or decode a secret message one letter at a time.
 
 ### Try SOS
 
 Enter **··· / −−− / ···**. Each slash here represents a letter pause. With default settings, make three quick pinches about 0.2 seconds apart, pause for approximately 1.5 seconds, make three holds of just over 2 seconds with short releases between them, pause for 1.5 seconds, then enter three quick pinches. After the last letter pause, the transcript reads **SOS**. In Demo, substitute a spacebar press for each pinch.
 
-**Undo** removes the newest pending symbol, then a queued space, then the last decoded character. An unknown sequence stays visible and blocks further entry. Undo corrects it and starts a fresh letter pause. **Clear sequence** discards the invalid sequence and preserves the transcript. During normal entry, **Clear** resets the message. **Copy** copies decoded text. **Stop Camera** releases the webcam immediately.
+**Undo** removes the newest pending symbol or the last character, including one space at a time. An unknown sequence stays visible and blocks further entry. Undo corrects it and starts a fresh letter pause. **Clear sequence** discards the invalid sequence and preserves the transcript. During normal entry, **Clear** resets the message. **Copy** copies decoded text. **Stop Camera** releases the webcam immediately.
 
 ## Tracking and privacy
 
