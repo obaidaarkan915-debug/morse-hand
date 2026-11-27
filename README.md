@@ -4,7 +4,21 @@ A local webcam instrument for typing with Morse code. Bring your index fingertip
 
 GitHub hosts the source when you publish this repository. The application runs on your own computer at **http://127.0.0.1:8000**. Each tab has its own session. Closing or refreshing the tab discards its transcript.
 
-## Install and run
+## Use it online (GitHub Pages)
+
+The `docs/` folder is a browser-only build: hand tracking (MediaPipe Tasks Vision, vendored in `docs/vendor/`) and the Morse logic (`docs/engine.js`, a port of the Python modules) run entirely in your tab, so it needs no server and no Codex or other subscription. Publish it free: in the repository, open **Settings → Pages**, choose **Deploy from a branch**, pick `main` and the `/docs` folder. The site appears at `https://<your-user>.github.io/morse-hand/` and stays up around the clock. Camera frames never leave your device; the browser downloads Google's hand model once and verifies its SHA-256 before use.
+
+To try it locally, run `python -m http.server 8000 --directory docs` and open http://localhost:8000.
+
+Check that the browser port still matches the Python implementation (Node 22 or newer):
+
+```bash
+node --test tests/js/parity.test.mjs
+```
+
+`tests/js/gen_golden.py` regenerates the recorded Python sessions in `tests/js/golden.json.gz` (`PYTHONPATH=. python tests/js/gen_golden.py`).
+
+## Install and run (local Python server)
 
 Use **CPython 3.12** on a machine with a compatible MediaPipe 0.10.32 wheel, plus a modern browser with WebSocket and camera support. Development and verification used Ubuntu x86-64, Python 3.12.3 and Google Chrome. A webcam is optional for Keyboard Demo. On Ubuntu, install the Python venv package if your Python installation lacks it.
 
