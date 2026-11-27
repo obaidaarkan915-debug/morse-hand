@@ -1,8 +1,13 @@
 # Morse Hand
 
-A local webcam instrument for typing with Morse code. Bring your index fingertip and thumb together, then open them to enter a symbol. The live decoder handles letters A–Z and digits 0–9. Keyboard Demo uses the same Python timer and decoder.
+A local webcam instrument for typing with Morse code. Bring your index fingertip and thumb together, then open them to enter a symbol. The live decoder handles letters A–Z and digits 0–9. Keyboard Demo uses the same timer and decoder as the camera.
 
-GitHub hosts the source when you publish this repository. The application runs on your own computer at **http://127.0.0.1:8000**. Each tab has its own session. Closing or refreshing the tab discards its transcript.
+There are two ways to run it, with the same interface and behaviour:
+
+- **Browser build (no install).** Open the [live site](https://obaidaarkan915-debug.github.io/morse-hand/). Everything runs inside your browser tab. See [Use it online](#use-it-online-github-pages).
+- **Local Python server.** Run it on your own computer at **http://127.0.0.1:8000**. See [Install and run](#install-and-run-local-python-server).
+
+Each tab has its own session. Closing or refreshing the tab discards its transcript.
 
 ## Use it online (GitHub Pages)
 
@@ -56,6 +61,8 @@ Enter **··· / −−− / ···**. Each slash here represents a letter pause
 
 ## Tracking and privacy
 
+In the **browser build**, hand tracking runs in your tab with MediaPipe Tasks Vision (WebAssembly). Camera frames are never uploaded or stored. The only network requests are the page files and a one-time download of Google's Hand Landmarker model, which the browser checks against the same pinned SHA-256 digest before use. The rest of this section describes the **local Python server**; the gesture rules are identical in both.
+
 The browser samples at most 12.5 JPEG frames per second, each at most 640 pixels on its longer side. Only one frame can be in flight. The browser skips samples while inference is busy and captures a fresh image after acknowledgment. Frames go to the loopback FastAPI WebSocket for in-memory inference. The app stores no images and contacts no external service during use. Loading the page does not open the camera.
 
 Python selects the largest visible palm initially and matches subsequent detections by handedness and proximity. Distances use pixel coordinates corrected for the frame aspect ratio. Thumb–index distance is normalized by palm size. Hysteresis distinguishes closing from opening, and index distance is smoothed. A space requires folded fingers and a thumb near the palm center. This gesture is a local typing command. Tracking loss cancels an unfinished spacing gesture. If tracking disappears, a closed hand can resume a pinch within 420 ms. Returning open cancels it. Longer loss disarms the input until an open hand is seen. Keep the active hand visible and avoid crossing hands. Detection and release timing are limited by the available samples.
@@ -77,10 +84,16 @@ On a shell that exports ROS or other global Python packages through `PYTHONPATH`
 | `morse_hand/decoder.py` | Alphabet, pending sequence and editable transcript |
 | `morse_hand/server.py` | Static assets, per-tab WebSocket session and loopback launch |
 | `morse_hand/static/` | Camera sampling, mirrored preview, interface and audio feedback |
+| `docs/engine.js` | Browser port of the decoder, timing, gesture and hand-selection modules |
+| `docs/app.js` | Browser interface, camera, MediaPipe loading and audio feedback |
+| `docs/vendor/mediapipe/` | Vendored MediaPipe Tasks Vision 0.10.32 (Apache-2.0, see `NOTICE`) |
+| `tests/js/` | Replays recorded Python sessions against `docs/engine.js` |
 
 ## Troubleshooting
 
 - **Permission denied or camera unavailable.** Allow camera access for the local address in the browser, check OS permissions and close other applications using the device. Keyboard Demo works without a camera.
 - **Hand not detected.** Show the entire hand in good light. Open your thumb and index finger clearly before the first pinch and after a tracking interruption.
 - **Model missing.** Activate the environment, run `morse-hand-model`, then start the camera again.
-- **Connection lost.** Copy any visible transcript, start the local server again and reload the page for a new session.
+- **Browser build: the camera does not start.** Open the site over `https://` (or `localhost`); browsers block cameras on plain `http://` pages. The first start downloads the hand model, so it needs an internet connection and a few seconds.
+- **Browser build: "Could not download the hand model".** Check your connection, ad blockers or network filters that block `storage.googleapis.com`, then press Start Camera again.
+- **Connection lost (Python server).** Copy any visible transcript, start the local server again and reload the page for a new session.
